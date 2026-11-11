@@ -10,7 +10,6 @@ Gotowy instalator znajduje się w:
 release/GrafikPro-Setup-0.1.1-x64.exe
 ```
 
-Po instalacji aplikację uruchamia się z ikony na pulpicie albo z menu Start. Szczegółowa instrukcja dla użytkowniczki znajduje się w [INSTRUKCJA_DLA_MAMY.md](./INSTRUKCJA_DLA_MAMY.md).
 
 ## Dla programisty
 
