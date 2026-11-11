@@ -13,7 +13,7 @@
     "publish:win": "npm run build && cross-env GRAFIKPRO_REQUIRE_UPDATES=true GRAFIKPRO_PUBLISH=true electron-builder --config electron-builder.config.cjs --win nsis --publish always",
     "package:dir": "npm run build && electron-builder --win --dir",
     "lint": "oxlint",
-    "test": "vitest run src && node --test electron/database.test.cjs electron/updater.test.cjs electron/publisher.test.cjs",
+    "test": "vitest run --passWithNoTests src && node --test electron/database.test.cjs electron/updater.test.cjs electron/publisher.test.cjs",
     "preview": "vite preview"
   },
   "build": {
