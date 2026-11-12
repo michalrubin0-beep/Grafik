@@ -10,15 +10,27 @@ export function upsertEmployee(data: AppData, employee: Employee): AppData {
   }
 }
 
-export function archiveEmployee(data: AppData, employeeId: string): AppData {
+export function removeEmployee(data: AppData, employeeId: string, now = new Date()): AppData {
   if (!data.employees.some((employee) => employee.id === employeeId)) {
-    throw new Error('Nie znaleziono pracownika do archiwizacji.')
+    throw new Error('Nie znaleziono pracownika do usunięcia.')
   }
+
+  const today = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-')
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   return {
     ...data,
     employees: data.employees.map((employee) =>
       employee.id === employeeId ? { ...employee, active: false } : employee,
+    ),
+    shifts: data.shifts.filter((shift) =>
+      shift.employeeId !== employeeId ||
+      shift.date < today ||
+      (shift.date === today && shift.start <= currentTime),
     ),
   }
 }

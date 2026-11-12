@@ -63,10 +63,12 @@ describe('employee persistence actions', () => {
     }))
   })
 
-  it('keeps employee history while archiving', async () => {
+  it('persists employee removal and deletes future shifts from the stored schedule', async () => {
     useAppStore.setState({ employees: [employee] })
+    const futureShift = { ...shift, id: 'future-shift', date: '9999-12-31' }
+    useAppStore.setState({ shifts: [shift, futureShift] })
 
-    const saved = await useAppStore.getState().archiveEmployee(employee.id)
+    const saved = await useAppStore.getState().removeEmployee(employee.id)
 
     expect(saved).toBe(true)
     expect(useAppStore.getState().employees[0].active).toBe(false)

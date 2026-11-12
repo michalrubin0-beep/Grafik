@@ -370,7 +370,7 @@ function SchedulePage() {
               </tr>
             </thead>
             <tbody>
-              {employees.map((employee) => (
+              {activeEmployees.map((employee) => (
                 <tr key={employee.id}>
                   <td className="rounded-xl border border-slate-700 bg-slate-900/60 p-3">
                     <div className="flex items-center gap-3">
@@ -396,9 +396,7 @@ function SchedulePage() {
                               <div className="mt-1">{formatShiftTime(shift.start)} - {formatShiftTime(shift.end)}</div>
                               <div className="text-[10px] text-slate-300">{positions.find((entry) => entry.id === shift.positionId)?.name}</div>
                             </button>
-                          )) : employee.active === false ? (
-                            <span className="flex h-10 w-full items-center justify-center rounded-lg border border-dashed border-slate-700 text-[10px] text-slate-600">Archiwum</span>
-                          ) : (
+                          )) : (
                             <button type="button" onClick={() => createShiftForCell(dateKey, employee.id)} className="flex h-10 w-full items-center justify-center rounded-lg border border-dashed border-slate-600 text-[10px] uppercase tracking-[0.25em] text-slate-500">+ Dodaj</button>
                           )}
                         </div>
@@ -482,11 +480,11 @@ function EmployeesPage() {
   const employees = useAppStore((state) => state.employees)
   const positions = useAppStore((state) => state.positions)
   const updateEmployee = useAppStore((state) => state.updateEmployee)
-  const archiveEmployee = useAppStore((state) => state.archiveEmployee)
+  const removeEmployee = useAppStore((state) => state.removeEmployee)
   const restoreEmployee = useAppStore((state) => state.restoreEmployee)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
-  const [employeeStatus, setEmployeeStatus] = useState<'active' | 'archived'>('active')
+  const [employeeStatus, setEmployeeStatus] = useState<'active' | 'removed'>('active')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [form, setForm] = useState({
@@ -507,7 +505,7 @@ function EmployeesPage() {
   const filteredEmployees = employees.filter((employee) => {
     const matchesSearch = `${employee.firstName} ${employee.lastName}`.toLowerCase().includes(search.toLowerCase())
     const matchesPosition = filter === 'all' || employee.positionIds.includes(filter)
-    const matchesStatus = employeeStatus === 'archived' ? employee.active === false : employee.active !== false
+    const matchesStatus = employeeStatus === 'removed' ? employee.active === false : employee.active !== false
     return matchesSearch && matchesPosition && matchesStatus
   })
 
@@ -553,13 +551,13 @@ function EmployeesPage() {
     })
   }
 
-  const handleArchive = async (employee: Employee) => {
-    if (!window.confirm(`Czy na pewno zarchiwizować pracownika ${employee.firstName} ${employee.lastName}? Jego historia grafiku zostanie zachowana.`)) return
+  const handleRemove = async (employee: Employee) => {
+    if (!window.confirm(`Czy usunąć ${employee.firstName} ${employee.lastName} z aktywnych pracowników? Nierozpoczęte zmiany od dziś zostaną usunięte z grafiku. Zakończone i rozpoczęte zmiany oraz dostępność pozostaną zachowane. Pracownika będzie można przywrócić z listy usuniętych.`)) return
     setMessage('')
     setSaving(true)
-    const saved = await archiveEmployee(employee.id)
+    const saved = await removeEmployee(employee.id)
     setSaving(false)
-    setMessage(saved ? 'Pracownik został zarchiwizowany.' : `Nie udało się zarchiwizować pracownika: ${useAppStore.getState().persistenceError ?? 'błąd zapisu danych.'}`)
+    setMessage(saved ? 'Pracownik został usunięty z aktywnej listy, a jego przyszłe zmiany usunięto z grafiku.' : `Nie udało się usunąć pracownika: ${useAppStore.getState().persistenceError ?? 'błąd zapisu danych.'}`)
   }
 
   const handleRestore = async (employee: Employee) => {
@@ -585,9 +583,9 @@ function EmployeesPage() {
         <Panel title="Lista pracowników">
           <div className="mb-4 flex flex-col gap-3 md:flex-row">
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Wyszukaj po imieniu i nazwisku" className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-white" />
-            <select value={employeeStatus} onChange={(event) => setEmployeeStatus(event.target.value as 'active' | 'archived')} className="rounded-xl border border-slate-700 bg-slate-950 p-2 text-white">
+            <select value={employeeStatus} onChange={(event) => setEmployeeStatus(event.target.value as 'active' | 'removed')} className="rounded-xl border border-slate-700 bg-slate-950 p-2 text-white">
               <option value="active">Aktywni pracownicy</option>
-              <option value="archived">Zarchiwizowani pracownicy</option>
+              <option value="removed">Usunięci pracownicy</option>
             </select>
             <select value={filter} onChange={(event) => setFilter(event.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 p-2 text-white">
               <option value="all">Wszystkie stanowiska</option>
@@ -607,7 +605,7 @@ function EmployeesPage() {
                   </div>
                   {employee.active === false
                     ? <button type="button" disabled={saving} onClick={() => void handleRestore(employee)} className="rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2 py-1 text-xs text-cyan-200">Przywróć</button>
-                    : <button type="button" disabled={saving} onClick={() => void handleArchive(employee)} className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-xs text-rose-200">Archiwizuj</button>}
+                    : <button type="button" disabled={saving} onClick={() => void handleRemove(employee)} className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-xs text-rose-200">Usuń</button>}
                 </div>
                 <div className="mt-4 grid gap-2 text-sm text-slate-300 md:grid-cols-3">
                   <div>Telefon: {employee.phone || '—'}</div>

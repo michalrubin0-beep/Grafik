@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 import { loadData, saveData } from '../lib/dexie'
-import { archiveEmployee, restoreEmployee, upsertEmployee } from '../services/employees'
+import { removeEmployee, restoreEmployee, upsertEmployee } from '../services/employees'
 import type { AppData, AvailabilityEntry, CompanySettings, Employee, Position, Shift } from '../types'
 
 const initialState: AppData = {
@@ -31,7 +31,7 @@ type AppStore = AppData & {
   hydrate: () => Promise<void>
   setCompanySettings: (settings: CompanySettings) => void
   updateEmployee: (employee: Employee) => Promise<boolean>
-  archiveEmployee: (id: string) => Promise<boolean>
+  removeEmployee: (id: string) => Promise<boolean>
   restoreEmployee: (id: string) => Promise<boolean>
   updatePosition: (position: Position) => void
   deletePosition: (id: string) => void
@@ -61,11 +61,16 @@ export const useAppStore = create<AppStore>((set, get) => {
           companySettings: state.companySettings,
           employees: next.employees,
           positions: state.positions,
-          shifts: state.shifts,
-          availability: state.availability,
+          shifts: next.shifts,
+          availability: next.availability,
         }
         await saveData(data)
-        set({ employees: next.employees, persistenceError: null })
+        set({
+          employees: next.employees,
+          shifts: next.shifts,
+          availability: next.availability,
+          persistenceError: null,
+        })
       })
       return true
     } catch (error) {
@@ -98,7 +103,7 @@ export const useAppStore = create<AppStore>((set, get) => {
       void get().persist()
     },
     updateEmployee: (employee) => persistEmployeeChange((data) => upsertEmployee(data, employee)),
-    archiveEmployee: (id) => persistEmployeeChange((data) => archiveEmployee(data, id)),
+    removeEmployee: (id) => persistEmployeeChange((data) => removeEmployee(data, id)),
     restoreEmployee: (id) => persistEmployeeChange((data) => restoreEmployee(data, id)),
     updatePosition: (position) => {
       set((state) => ({

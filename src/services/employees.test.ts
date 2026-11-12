@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { archiveEmployee, restoreEmployee, upsertEmployee } from './employees'
+import { removeEmployee, restoreEmployee, upsertEmployee } from './employees'
 import type { AppData, Employee } from '../types'
 
 const employee: Employee = {
@@ -67,16 +67,25 @@ describe('employee actions', () => {
     expect(upsertEmployee(withNewEmployee, { ...newEmployee, lastName: 'Nowak' }).employees[1].lastName).toBe('Nowak')
   })
 
-  it('archives and restores an employee without deleting shifts or availability', () => {
-    const archived = archiveEmployee(data, employee.id)
+  it('removes future shifts, keeps completed shift history and availability, and allows restoring the employee', () => {
+    const dataWithFutureShifts: AppData = {
+      ...data,
+      shifts: [
+        ...data.shifts,
+        { ...data.shifts[0], id: 'shift-started-today', date: '2026-11-12', start: '08:00', end: '12:00' },
+        { ...data.shifts[0], id: 'shift-later-today', date: '2026-11-12', start: '14:00', end: '18:00' },
+        { ...data.shifts[0], id: 'shift-future', date: '2026-11-13' },
+      ],
+    }
+    const removed = removeEmployee(dataWithFutureShifts, employee.id, new Date(2026, 10, 12, 10, 0))
 
-    expect(archived.employees[0].active).toBe(false)
-    expect(archived.shifts).toEqual(data.shifts)
-    expect(archived.availability).toEqual(data.availability)
-    expect(restoreEmployee(archived, employee.id).employees[0].active).toBe(true)
+    expect(removed.employees[0].active).toBe(false)
+    expect(removed.shifts.map((shift) => shift.id)).toEqual(['shift-1', 'shift-started-today'])
+    expect(removed.availability).toEqual(data.availability)
+    expect(restoreEmployee(removed, employee.id).employees[0].active).toBe(true)
   })
 
-  it('rejects archiving an unknown employee id', () => {
-    expect(() => archiveEmployee(data, 'missing-id')).toThrow('Nie znaleziono pracownika')
+  it('rejects removing an unknown employee id', () => {
+    expect(() => removeEmployee(data, 'missing-id')).toThrow('Nie znaleziono pracownika')
   })
 })
