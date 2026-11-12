@@ -19,40 +19,42 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Check for Node project
-        id: node-project
-        shell: bash
-        run: |
-          if [ -f package.json ] && { [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; }; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-            echo "Node project with dependency lock file detected."
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "No Node.js package or lock file found; skipping Node-based release steps."
-          fi
-
       - name: Set up Node.js
-        if: steps.node-project.outputs.enabled == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
-        if: steps.node-project.outputs.enabled == 'true'
         run: npm ci
 
       - name: Run tests
-        if: steps.node-project.outputs.enabled == 'true'
         run: npm test
 
       - name: Set release version
-        if: steps.node-project.outputs.enabled == 'true'
-        shell: bash
-        run: npm version "0.2.${GITHUB_RUN_NUMBER}" --no-git-tag-version
+        shell: pwsh
+        run: |
+          $version = "0.2.${{ github.run_number }}"
+          npm version $version --no-git-tag-version
+          "VERSION=$version" >> $env:GITHUB_ENV
 
-      - name: Build and publish Windows installer
-        if: steps.node-project.outputs.enabled == 'true'
-        run: npm run publish:win
+      - name: Build Windows installer
+        run: npm run package:win
+
+      - name: Publish GitHub release
+        shell: pwsh
+        run: |
+          $installer = "release/GrafikPro-Setup-$env:VERSION-x64.exe"
+          $blockmap = "$installer.blockmap"
+          $metadata = "release/latest.yml"
+          foreach ($file in @($installer, $blockmap, $metadata)) {
+            if (-not (Test-Path $file)) {
+              throw "Required release file is missing: $file"
+            }
+          }
+          gh release create "v$env:VERSION" $installer $blockmap $metadata `
+            --title "$env:VERSION" `
+            --notes "Automatyczne wydanie GrafikPro $env:VERSION" `
+            --target $env:GITHUB_SHA
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
