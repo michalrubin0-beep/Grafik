@@ -105,6 +105,15 @@ function StatCard({ label, value, tone = 'neutral' }: { label: string; value: st
   )
 }
 
+function PageHelp({ children }: { children: string }) {
+  return (
+    <div role="note" className="rounded-2xl border border-cyan-500/30 bg-cyan-500/5 px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">O tej sekcji</p>
+      <p className="mt-1 text-sm leading-6 text-slate-300">{children}</p>
+    </div>
+  )
+}
+
 function DashboardPage() {
   const employees = useAppStore((state) => state.employees)
   const shifts = useAppStore((state) => state.shifts)
@@ -150,6 +159,8 @@ function DashboardPage() {
           <h1 className="mt-2 text-3xl font-semibold text-white">Dashboard</h1>
         </div>
       </div>
+
+      <PageHelp>To szybki podgląd pracowników, zmian i godzin. Wykres pokazuje bieżący tydzień, ale karta „Zmiany w tygodniu” liczy wszystkie zmiany. Liczniki konfliktów i nieobsadzenia są orientacyjne — nie traktuj ich jako pewnego sprawdzenia grafiku.</PageHelp>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatCard label="Pracownicy" value={String(employees.filter((employee) => employee.active).length)} />
@@ -354,6 +365,8 @@ function SchedulePage() {
           <button type="button" className="rounded-xl bg-cyan-500 px-4 py-2 font-medium text-slate-950" onClick={() => setOpen(true)}>Dodaj zmianę</button>
         </div>
       </div>
+
+      <PageHelp>Przeglądaj grafik tydzień po tygodniu. Zmieniaj tydzień strzałkami, dodawaj zmianę przyciskiem lub przez „+ Dodaj”, a kliknięciem istniejącej zmiany otwórz jej edycję. Przerwa jest odejmowana przy obliczaniu godzin pracy.</PageHelp>
 
       <Panel title={`Tydzień ${format(weekStart, 'dd.MM')} - ${format(endOfWeek(weekStart, { weekStartsOn: 1 }), 'dd.MM.yyyy')}`}>
         <div className="overflow-x-auto">
@@ -577,6 +590,8 @@ function EmployeesPage() {
         </div>
       </div>
 
+      <PageHelp>Dodawaj pracowników i przypisuj im stanowiska. Możesz wyszukiwać osoby oraz przełączać listę aktywnych i usuniętych pracowników. „Usuń” usuwa nierozpoczęte zmiany od dziś, zachowuje historię i pozwala później przywrócić osobę.</PageHelp>
+
       {message && <p role="status" className={`rounded-xl border p-3 ${message.startsWith('Nie udało') ? 'border-rose-500/30 bg-rose-500/10 text-rose-200' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'}`}>{message}</p>}
 
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
@@ -666,6 +681,7 @@ function PositionsPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-cyan-400">Stanowiska</p>
         <h1 className="mt-2 text-3xl font-semibold text-white">Zarządzanie stanowiskami</h1>
       </div>
+      <PageHelp>Stanowisko opisuje rodzaj pracy, np. kasjer lub magazynier. Wpisz nazwę, opis i kolor, a potem przypisz stanowisko pracownikom. Wymagana liczba osób służy jako orientacyjna informacja — nie określa obsady konkretnej zmiany. Uważaj przy usuwaniu stanowiska: jego wcześniejsze przypisania nie są automatycznie czyszczone.</PageHelp>
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <Panel title="Lista stanowisk">
           <div className="space-y-3">
@@ -723,6 +739,8 @@ function AvailabilityPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-cyan-400">Dostępność</p>
         <h1 className="mt-2 text-3xl font-semibold text-white">Dostępność pracowników</h1>
       </div>
+
+      <PageHelp>Wybierz osobę, dzień tygodnia, godziny i rodzaj wpisu (dostępny, niedostępny, dzień wolny lub urlop). Te powtarzające się reguły pomagają generatorowi ułożyć grafik; nie wskazują konkretnych dat urlopu.</PageHelp>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Panel title="Wpisane dostępności">
@@ -834,6 +852,8 @@ function AutoSchedulingPage() {
           <button type="button" onClick={() => setSettingsOpen((open) => !open)} className="rounded-xl border border-slate-700 bg-slate-900 px-5 py-2 text-slate-200">USTAWIENIA GENEROWANIA</button>
         </div>
       </div>
+
+      <PageHelp>Generator tworzy propozycję na podstawie pracowników, stanowisk, dostępności, istniejących zmian i ustawionych szablonów. Ustaw zakres dat i wymagania, wygeneruj grafik i sprawdź ostrzeżenia przed zapisem. Niepełnej propozycji nie można zapisać; oba przyciski zapisu dodają zmiany do głównego grafiku.</PageHelp>
 
       {settingsOpen && (
         <Panel title="Konfiguracja wygenerowania">
@@ -963,6 +983,8 @@ function StatisticsPage() {
         <h1 className="mt-2 text-3xl font-semibold text-white">Statystyki i analityka</h1>
       </div>
 
+      <PageHelp>Wykresy pokazują sumę zapisanych godzin według pracownika i stanowiska. Nie ma jeszcze wyboru okresu, więc wyniki obejmują wszystkie zapisane zmiany.</PageHelp>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <Panel title="Godziny pracy pracowników">
           <div className="h-72">
@@ -1057,6 +1079,8 @@ function ReportsPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-cyan-400">Raporty</p>
         <h1 className="mt-2 text-3xl font-semibold text-white">Eksport i raporty</h1>
       </div>
+
+      <PageHelp>Przyciski pobierają plik PDF, Excel lub CSV z zapisanymi zmianami. Obecnie eksport obejmuje wszystkie zmiany; lista „Aktywne zestawienia” poniżej nie jest zestawem filtrów ani osobnych raportów.</PageHelp>
 
       <div className="grid gap-4 md:grid-cols-3">
         <button type="button" onClick={exportPdf} className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 p-5 text-left text-cyan-200">Eksport PDF</button>
@@ -1155,6 +1179,8 @@ function SettingsPage({
         <p className="text-sm uppercase tracking-[0.2em] text-cyan-400">Ustawienia</p>
         <h1 className="mt-2 text-3xl font-semibold text-white">Ustawienia firmy</h1>
       </div>
+
+      <PageHelp>Tutaj zmienisz dane firmy, godziny, domyślną przerwę i motyw. W aplikacji Windows możesz też eksportować lub przywracać lokalną kopię bazy oraz sprawdzać aktualizacje. Przywrócenie kopii zastępuje obecne dane.</PageHelp>
 
       <Panel title="Parametry firmy">
         <form onSubmit={save} className="grid gap-4 md:grid-cols-2 text-sm text-slate-300">

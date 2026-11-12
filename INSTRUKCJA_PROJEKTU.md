@@ -1,6 +1,6 @@
 # INSTRUKCJA PROJEKTU – GrafikPro
 
-Aktualizacja: 2026-11-11
+Aktualizacja: 2026-11-12
 
 ## 1. Cel i opis aplikacji
 
@@ -93,6 +93,22 @@ W obecnym stanie projektu zaimplementowane są następujące obszary:
 - wymuszona kopia SQLite przed instalacją; błąd kopii blokuje instalację,
 - aktualizacje dystrybuowane jako publiczne GitHub Releases przez `electron-updater`,
 - brak wysyłania bazy danych lub danych pracowników do serwera aktualizacji.
+
+### 2.10. Przewodnik po menu — do czego służy każda sekcja
+
+Krótkie wyjaśnienie każdej sekcji jest również widoczne na górze jej ekranu w aplikacji.
+
+1. **Dashboard** — szybki podgląd liczby pracowników, zmian, godzin i bieżącego dnia. Wykresy i karty są podsumowaniem, a nie formularzem do edycji grafiku. Ostrzeżenia o konfliktach nie są jeszcze wiarygodnym sprawdzaniem wszystkich konfliktów.
+2. **Grafik pracy** — tygodniowy kalendarz aktywnych pracowników. Strzałkami przechodzi się między tygodniami, przyciskiem „Dzisiaj” wraca do obecnego tygodnia, a „Dodaj zmianę” lub „+ Dodaj” otwiera formularz. Kliknięcie istniejącej zmiany pozwala ją edytować albo usunąć. Formularz zawiera osobę, datę, godziny, stanowisko, typ zmiany, przerwę, kolor i uwagi.
+3. **Pracownicy** — dodawanie osób oraz przeglądanie aktywnych i usuniętych pracowników. Można wyszukiwać po nazwisku i filtrować po stanowisku. „Usuń” wyłącza osobę z aktywnej listy i usuwa jej nierozpoczęte zmiany od bieżącego dnia; rozpoczęte i wcześniejsze zmiany oraz dostępność zostają zachowane. Usuniętą osobę można przywrócić.
+4. **Stanowiska** — tworzenie kategorii pracy, np. „Kasjer” lub „Magazynier”. W formularzu podaje się nazwę, opis, kolor i wymaganą liczbę osób. Kolor pomaga odróżniać stanowiska; opis wyjaśnia ich zakres. Obecnie nie ma edycji istniejącego stanowiska. Usunięcie nie czyści automatycznie jego przypisań u pracowników i w historycznych zmianach, więc trzeba zachować ostrożność.
+5. **Dostępność** — tygodniowe reguły dostępności danej osoby: dostępny, niedostępny, dzień wolny lub urlop, dla wybranego dnia tygodnia i godzin. Wpisy są wykorzystywane przez generator. To nie jest formularz urlopu przypisanego do konkretnych dat.
+6. **Automatyczne układanie grafiku** — układa propozycję zmian dla wybranego zakresu dat i dni pracy na podstawie aktywnych pracowników, przypisanych stanowisk, dostępności, istniejących zmian oraz szablonów. „Generuj grafik” pokazuje podgląd i ostrzeżenia. Niepełnego wyniku nie można zapisać. Generator jest heurystyczny; nie jest gwarantowane znalezienie najlepszego rozwiązania. „Zapisz jako wersję roboczą” i „Zatwierdź grafik” obecnie zapisują zmiany do tej samej głównej listy — nie tworzą osobnych wersji. Ustawienia generatora nie są zapisywane jako szablon.
+7. **Statystyki** — wykres godzin według pracownika i stanowiska. Obecnie sumuje zapisane zmiany bez wyboru okresu; nie jest to filtrowany raport miesięczny.
+8. **Raporty** — pobieranie pliku PDF, Excel (XLSX) lub CSV z zapisanymi zmianami. Eksport obejmuje wszystkie zapisane zmiany; widoczna niżej lista „Aktywne zestawienia” jest opisowa i nie stanowi osobnych przycisków ani filtrów raportów.
+9. **Ustawienia** — dane firmy, waluta, godziny otwarcia, domyślna przerwa i motyw; w aplikacji Windows także lokalizacja bazy/kopii, eksport i przywracanie bazy SQLite oraz sekcja aktualizacji. Przywracanie kopii zastępuje bieżące dane, ale przed operacją aplikacja tworzy kopię bezpieczeństwa. Aktualizacje wymagają internetu.
+
+W górnym pasku ikona słońca/księżyca przełącza motyw. Ikona dzwonka jest obecnie tylko elementem wyglądu i nie otwiera działającego centrum powiadomień.
 
 ## 3. Struktura folderów i plików
 
@@ -521,6 +537,13 @@ W chwili obecnej znane są następujące ograniczenia:
 11. `npm audit --omit=dev` zgłasza dwa umiarkowane advisories w zależności `ExcelJS → uuid@8.3.2`; automatyczna naprawa npm wymagałaby wymuszonej, niezgodnej wersji ExcelJS i nie została zastosowana.
 12. Starsze wydania 0.2.7 i 0.2.11 były niekompletne; aktualny release 0.2.12 zawiera instalator i pliki wymagane do aktualizacji. Nie należy instalować niekompletnych starszych wydań.
 13. Zainstalowana dotąd wersja 0.1.0 nie zawiera aktualizatora. Trzeba ją jednorazowo zastąpić ręcznie instalatorem z obsługą aktualizacji; dopiero następne wersje będą instalowane z poziomu aplikacji.
+14. Karta „Zmiany w tygodniu” na Dashboardzie pokazuje liczbę wszystkich zmian, nie tylko bieżącego tygodnia. Licznik „Konflikty” nie sprawdza poprawnie nakładania się godzin, a dwie pozycje w panelu ostrzeżeń są wpisane na stałe. Nie należy traktować ich jako aktualnej walidacji grafiku.
+15. Licznik „Nieobsadzone zmiany” porównuje wymaganą liczbę osób na stanowisku z liczbą aktywnych pracowników mających to stanowisko, a nie z rzeczywistą obsadą każdej zmiany.
+16. Usunięcie stanowiska nie usuwa ani nie aktualizuje powiązań w profilach pracowników i historycznych zmianach.
+17. Generator ma uproszczone ograniczenia: minimalna liczba godzin wpływa na kolejność przydziałów, ale nie jest gwarantowana; wymagana liczba osób działa według szablonu zmiany. Ustawienie typu zakresu „Tydzień/Miesiąc” nie ustawia dat automatycznie — początek i koniec wybiera się osobno. Godziny otwarcia są tylko wyświetlane, a odpoczynek między zmianami nie jest walidowany. Priorytety i wyniki należy sprawdzić przed zapisaniem.
+18. Przyciski „Zapisz jako wersję roboczą” i „Zatwierdź grafik” działają obecnie tak samo — zapisują zmiany do głównego grafiku. Brakuje osobnych wersji roboczych, historii zatwierdzeń, porównania wariantów i ręcznej edycji podglądu generatora.
+19. Sekcja raportów nie ma filtrów według tygodnia, miesiąca ani pracownika; eksportuje wszystkie zapisane zmiany. Lista typów raportów widoczna na stronie jest obecnie tekstowym opisem.
+20. Dostępność i urlopy są zapisane jako dzień tygodnia oraz zakres godzin, bez dat początku/końca nieobecności.
 
 ## 13. Instrukcja uruchamiania aplikacji
 
